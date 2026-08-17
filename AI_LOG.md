@@ -41,3 +41,17 @@
 - **AI ตอบผิด / น่าสงสัยตรงไหน:** ตามคาด — implementation เดิมพังทันทีตอนรันเทสต์ใหม่ (`1103700230480` ควรเป็น invalid เพราะ checksum ที่ถูกต้องคือ 3 ไม่ใช่ 0) ยืนยันว่า gap จากรายการที่ 1 มีจริง ไม่ใช่แค่ทฤษฎี
 - **เราตัดสินใจ / แก้อย่างไร:** ให้ AI เพิ่ม logic คำนวณ checksum ตามสูตรบัตรประชาชนไทย (ผลรวมถ่วงน้ำหนักหลักที่ 1-12, mod 11, แล้วเทียบกับหลักที่ 13) รันเทสต์ทั้งหมดอีกครั้งจนผ่านครบก่อนรับงาน
 - **สิ่งที่ได้เรียนรู้:** วงจร "เทสต์คุม AI" ใช้ได้จริง — เขียนเทสต์ที่ยังไม่ผ่านก่อน (red) แล้วให้ AI ทำให้ผ่าน (green) เป็นวิธีบังคับให้ AI ทำ business logic ที่ถูกต้อง ไม่ใช่แค่เดาตาม pattern ผิวๆ ของเทสต์ที่มีอยู่
+
+## Workshop #4 — Ktor REST API (Task)
+
+### รายการที่ 1
+- **Prompt ที่ใช้ (สรุป):** สร้าง endpoint ตาม spec: GET/POST/PUT/DELETE /tasks พร้อม build.gradle.kts เดิม ระบุ Ktor 3.x
+- **AI ตอบผิด / น่าสงสัยตรงไหน:** โจทย์ระบุให้สร้าง `TaskRequest(content, isDone)` แยกจาก `Task(id, content, isDone)` เพื่อไม่ให้ client ส่ง id เอง แต่ตรงข้อ POST กลับเขียนว่า "ใช้ `call.receive<Task>()`" ซึ่งขัดกันเอง (ถ้า receive เป็น Task ตรงๆ จะต้องให้ client ส่ง id มาด้วย ผิด intent ของ TaskRequest)
+- **เราตัดสินใจ / แก้อย่างไร:** เลือกใช้ `call.receive<TaskRequest>()` แทนคำสั่งตามตัวอักษร แล้วให้ server generate id เอง ตรงกับเจตนาของ data model ที่โจทย์กำหนดไว้ก่อนหน้า
+- **สิ่งที่ได้เรียนรู้:** โจทย์/สเปคเองก็ขัดแย้งกันได้ ต้องอ่านทั้งก้อนแล้วเลือกยึด intent ที่สอดคล้องกันมากกว่า ไม่ใช่เชื่อประโยคเดียวตรงๆ
+
+### รายการที่ 2
+- **Prompt ที่ใช้ (สรุป):** เพิ่ม kotlinx.serialization และ Ktor version ลง build.gradle.kts โดยไม่เดา version จากความจำ ให้ compiler เป็นกรรมการ
+- **AI ตอบผิด / น่าสงสัยตรงไหน:** ตอนแรกเกือบลืมใส่ `kotlin("plugin.serialization")` compiler plugin คู่กับ dependency `kotlinx-serialization-json` — ถ้าใส่แค่ dependency เฉยๆ `@Serializable` จะ compile ผ่านแต่ไม่ generate serializer จริง
+- **เราตัดสินใจ / แก้อย่างไร:** เพิ่ม plugin `kotlin("plugin.serialization") version "2.1.21"` ให้ตรงกับ Kotlin plugin version แล้วรัน `./gradlew compileKotlin` ยืนยันว่า resolve และ compile ผ่านจริงก่อนเขียน route logic ต่อ
+- **สิ่งที่ได้เรียนรู้:** kotlinx.serialization ต้องมีทั้ง dependency และ compiler plugin คู่กันเสมอ ขาดอันใดอันหนึ่งจะไม่ error ตอน compile แต่จะพังตอน runtime แทน — ต้องรันจริงถึงจะมั่นใจได้
