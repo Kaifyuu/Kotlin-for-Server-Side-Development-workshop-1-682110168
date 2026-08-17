@@ -36,3 +36,26 @@ tasks.test {
 kotlin {
     jvmToolchain(18)
 }
+
+// Run from any terminal (VS Code included) with correct Thai console output.
+// stdout.encoding forces UTF-8 regardless of Windows console codepage detection.
+val toolchainLauncher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(18))
+}
+
+tasks.register<JavaExec>("runWorkshop1") {
+    group = "workshop"
+    mainClass.set("org.example.Workshop1Kt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(toolchainLauncher)
+    systemProperty("stdout.encoding", "UTF-8")
+    standardInput = System.`in`
+}
+
+tasks.register<JavaExec>("runWorkshop2") {
+    group = "workshop"
+    mainClass.set("org.example.Workshop2Kt")
+    classpath = sourceSets["main"].runtimeClasspath
+    javaLauncher.set(toolchainLauncher)
+    systemProperty("stdout.encoding", "UTF-8")
+}
