@@ -37,8 +37,7 @@ kotlin {
     jvmToolchain(18)
 }
 
-// Run from any terminal (VS Code included) with correct Thai console output.
-// stdout.encoding forces UTF-8 regardless of Windows console codepage detection.
+// Run from any terminal (VS Code included).
 val toolchainLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(18))
 }
@@ -50,11 +49,6 @@ tasks.register<JavaExec>("runWorkshop1") {
     javaLauncher.set(toolchainLauncher)
     systemProperty("stdout.encoding", "UTF-8")
     standardInput = System.`in`
-    // Gradle normally re-decodes child stdout through its own logging pipe,
-    // which can corrupt non-ASCII text regardless of the child's own encoding.
-    // Writing straight to the inherited console handle bypasses that relay.
-    standardOutput = System.out
-    errorOutput = System.err
 }
 
 tasks.register<JavaExec>("runWorkshop2") {
@@ -63,6 +57,13 @@ tasks.register<JavaExec>("runWorkshop2") {
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(toolchainLauncher)
     systemProperty("stdout.encoding", "UTF-8")
-    standardOutput = System.out
-    errorOutput = System.err
+}
+
+// Prints the resolved runtime classpath so scripts/run-workshop.ps1 can invoke
+// java.exe directly, bypassing Gradle's own stdout relay (which can corrupt
+// non-ASCII output regardless of the child JVM's own encoding settings).
+tasks.register("workshopClasspath") {
+    doLast {
+        println(sourceSets["main"].runtimeClasspath.asPath)
+    }
 }
