@@ -1,4 +1,5 @@
 val ktorVersion = "3.0.3"
+val exposedVersion = "1.0.0-beta-1"
 
 plugins {
     kotlin("jvm") version "2.1.21"
@@ -22,6 +23,11 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("com.h2database:h2:2.3.232")
 }
 
 tasks.test {

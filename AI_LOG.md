@@ -55,3 +55,17 @@
 - **AI ตอบผิด / น่าสงสัยตรงไหน:** ตอนแรกเกือบลืมใส่ `kotlin("plugin.serialization")` compiler plugin คู่กับ dependency `kotlinx-serialization-json` — ถ้าใส่แค่ dependency เฉยๆ `@Serializable` จะ compile ผ่านแต่ไม่ generate serializer จริง
 - **เราตัดสินใจ / แก้อย่างไร:** เพิ่ม plugin `kotlin("plugin.serialization") version "2.1.21"` ให้ตรงกับ Kotlin plugin version แล้วรัน `./gradlew compileKotlin` ยืนยันว่า resolve และ compile ผ่านจริงก่อนเขียน route logic ต่อ
 - **สิ่งที่ได้เรียนรู้:** kotlinx.serialization ต้องมีทั้ง dependency และ compiler plugin คู่กันเสมอ ขาดอันใดอันหนึ่งจะไม่ error ตอน compile แต่จะพังตอน runtime แทน — ต้องรันจริงถึงจะมั่นใจได้
+
+## Workshop #5 — Capstone: Simple Poll/Survey API (Ktor + Exposed + H2)
+
+### รายการที่ 1
+- **Prompt ที่ใช้ (สรุป):** เพิ่ม Exposed + H2 ลง build.gradle.kts ระบุว่า AGENTS.md อ้างว่าใช้ Exposed 1.x แต่ห้ามเดา version เอง ให้ compiler เป็นกรรมการเหมือนที่ทำกับ Ktor ใน Workshop #4
+- **AI ตอบผิด / น่าสงสัยตรงไหน:** Exposed 1.0.0-beta-1 ที่ resolve ได้ เปลี่ยน package จาก `org.jetbrains.exposed.sql` (ที่คุ้นเคย) เป็น `org.jetbrains.exposed.v1.core` / `org.jetbrains.exposed.v1.jdbc` ทั้งหมด — ถ้าเขียนโค้ดจากความจำเดิมจะ import ผิดหมดทันที
+- **เราตัดสินใจ / แก้อย่างไร:** แตก jar ออกมาแล้วใช้ `javap` ตรวจ signature จริงของ `Table`, `Database.connect`, `SchemaUtils`, และ `QueriesKt` (selectAll/insert/update/deleteWhere) ก่อนเขียนโค้ดสักบรรทัด แทนที่จะเดาจาก API เวอร์ชันเก่า
+- **สิ่งที่ได้เรียนรู้:** เวอร์ชัน beta ของ library อาจ rename package/namespace ทั้งยวงได้ การ "จำ API เก่า" ใช้ไม่ได้กับ dependency ที่เพิ่ง major-bump — ต้องตรวจ bytecode/signature จริงเมื่อไม่มั่นใจ ไม่ใช่เดาแล้วแก้ทีละ compile error
+
+### รายการที่ 2
+- **Prompt ที่ใช้ (สรุป):** เขียน `PollRepository.vote(id)` ให้เพิ่ม voteCount ทีละ 1 แบบ atomic ในระดับ SQL ไม่ใช่อ่านค่าแล้วบวกใน Kotlin
+- **AI ตอบผิด / น่าสงสัยตรงไหน:** โค้ดแรกที่เขียน `PollOptions.deleteWhere { PollOptions.pollId eq id }` และ `it[voteCount] = PollOptions.voteCount + 1` compile ไม่ผ่าน เพราะ `eq`/`plus` ใน Exposed 1.x เป็น member-extension ของ interface `ISqlExpressionBuilder` ไม่ใช่ top-level infix function เหมือนเดิม ต้องมี receiver `SqlExpressionBuilder` ชัดเจนถึงจะเรียกได้ (`with(SqlExpressionBuilder) { ... }`)
+- **เราตัดสินใจ / แก้อย่างไร:** ห่อทุกจุดที่เรียก `eq`/`plus` ด้วย `with(SqlExpressionBuilder) { ... }` แล้ว compile ผ่านจริง จากนั้นเขียนเทสต์ `vote increments voteCount by 1 without race on repeated calls` เรียก vote 3 ครั้งแล้วยืนยันว่า count = 3 (ไม่ใช่แค่ 1) เพื่อพิสูจน์ว่า SQL-level increment ทำงานถูกจริง ไม่ใช่ overwrite ค่าเดิม
+- **สิ่งที่ได้เรียนรู้:** compile error ไม่ใช่แค่ตัวก่อกวน บางทีมันคือสัญญาณว่า API เปลี่ยน scoping/receiver ไปทั้งชุด ต้องเข้าใจว่า "ทำไม" ผิด ไม่ใช่แค่แก้ให้ผ่านโดยไม่รู้สาเหตุ
