@@ -50,6 +50,11 @@ tasks.register<JavaExec>("runWorkshop1") {
     javaLauncher.set(toolchainLauncher)
     systemProperty("stdout.encoding", "UTF-8")
     standardInput = System.`in`
+    // Gradle normally re-decodes child stdout through its own logging pipe,
+    // which can corrupt non-ASCII text regardless of the child's own encoding.
+    // Writing straight to the inherited console handle bypasses that relay.
+    standardOutput = System.out
+    errorOutput = System.err
 }
 
 tasks.register<JavaExec>("runWorkshop2") {
@@ -58,4 +63,6 @@ tasks.register<JavaExec>("runWorkshop2") {
     classpath = sourceSets["main"].runtimeClasspath
     javaLauncher.set(toolchainLauncher)
     systemProperty("stdout.encoding", "UTF-8")
+    standardOutput = System.out
+    errorOutput = System.err
 }
