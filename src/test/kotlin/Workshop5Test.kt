@@ -33,7 +33,7 @@ class Workshop5Test {
     }
 
     @Test
-    fun `vote increments voteCount by 1 without race on repeated calls`() {
+    fun `vote increments voteCount by 1 on each call`() {
         val poll = PollRepository.createPoll("Favorite color?")
         val option = PollRepository.createOption(poll.id, "Blue")!!
 
